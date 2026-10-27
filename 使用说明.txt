@@ -1,0 +1,169 @@
+﻿RTXPlayer —— 带 NVIDIA RTX 超分辨率与 AI 插帧的视频播放器
+================================================================
+
+启动与打开视频
+--------------
+双击 RTXPlayer.exe。打开视频的方式：
+  · 把视频拖进窗口（或拖到 RTXPlayer.exe 图标上）
+  · 双击空白画面、控制条的“打开”按钮、Ctrl+O，或右键菜单 → 打开文件 / 打开文件夹
+打开一个视频后，同文件夹里的其他视频会自动排进播放列表（PgUp / PgDn 切换，播完自动播下一个）。
+再次打开同一个视频会从上次的位置继续播放（右键 → 播放 → 记住播放位置，可关闭）。
+
+控制条（窗口底部；全屏时把鼠标移到屏幕底部显示）
+------------------------------------------------
+  进度条            点击或拖动跳转，鼠标悬停显示该处的时间
+  ⏮ ▶/⏸ ⏹ ⏭ 📂     上一个 / 播放暂停 / 停止 / 下一个 / 打开文件
+  时间              当前时间 / 总时长
+  视频增强状态按钮  显示当前在用的超分 / 插帧（如“RTX VSR · 60 fps”），点击打开“视频增强设置”
+  播放速度          点击选择 0.25× ~ 4×（两倍速选 2×）
+  音量              点喇叭静音，拖动滑块调音量（也可在画面上滚动滚轮）
+  ⛶                全屏
+  ≡                菜单
+
+快捷键（PotPlayer 风格）
+------------------------
+  播放      空格 / 单击画面     播放、暂停
+            ← / →               快退 / 快进 10 秒
+            Ctrl + ← / →        快退 / 快进 30 秒
+            Shift + ← / →       快退 / 快进 60 秒
+            Home                回到开头
+            PgUp / PgDn         上一个 / 下一个文件
+            D / F               上一帧 / 下一帧
+  速度      C / X / Z           加速 0.1× / 减速 0.1× / 恢复正常速度
+  声音      ↑ / ↓、滚轮         音量 + / -
+            M                   静音
+  画面      Enter / 双击画面    全屏，Esc 退出全屏
+            S                   截图
+  增强      F5                  视频增强设置（选择超分 / 插帧算法）
+            Ctrl + E            暂时关闭 / 重新开启增强
+            Tab                 显示增强状态（含实时输出帧率）
+  其他      Ctrl + O 打开文件，右键 菜单（菜单里也有“快捷键一览”）
+
+视频增强：先播放、后增强
+------------------------
+视频打开后立即原画播放，默认 3 秒后再启用增强（可设为立即 / 2 / 3 / 5 / 10 秒）。
+启用时画面约有 0.5 秒的短暂停顿，之后屏幕左上角显示当前方案，控制条上的状态按钮也会更新。
+
+选择算法：按 F5 或点控制条上的状态按钮打开“视频增强设置”，或右键 → 视频增强。
+
+  超分辨率算法
+    · NVIDIA Maxine VSR（默认，推荐）：NVIDIA Video Effects SDK 的 AI 超分，放大到 2K / 4K（见下文）。
+    · NVIDIA RTX Video Super Resolution（驱动内置）：驱动里的 RTX 超分，放大到 2K / 4K，几乎不占资源。
+    · AMD FidelityFX Super Resolution（FSR 1.0）：通用着色器放大 + 锐化。
+    · NVIDIA Image Scaling（NIS）：通用着色器放大 + 锐化。
+    · Anime4K 动漫（快速 / 高画质）：专为动画优化的 CNN 放大。
+    · 传统缩放 EWA Lanczos：高质量的常规缩放。
+    （Maxine / RTX VSR 先把画面放大到“目标分辨率”；其余算法在渲染时直接放大到窗口尺寸。）
+  超分开启条件：自动（源 ≤1080p 时）/ 始终开启 / 关闭
+  目标分辨率（Maxine / RTX VSR）：自动（显示器高度 ≥1600 像素选 4K，否则 2K）/ 2K / 4K
+  Maxine 画质：自动（单独超分或配合 FRUC 用 3 高，配合 RIFE 用 2 中）/ 1 低 / 2 中 / 3 高 / 4 极高
+
+  插帧算法
+    · RIFE 4.26 · AI 插帧（默认，画质优先）
+    · RIFE 4.25 lite · AI 插帧（均衡）
+    · RIFE 4.22 lite · AI 插帧（速度优先）
+    · NVIDIA 光流 FRUC：显卡硬件光流插帧，固定 ×2，极快（见下文）
+    · 帧混合：按显示器刷新率混合相邻帧，不生成新画面，几乎不占显卡
+  插帧开启条件：自动（源 ≤30fps 时）/ 始终开启 / 关闭
+  目标帧率：原帧率 ×2（默认，30→60、24→48）/ 60 / 90 / 120 / 144 / 165 / 240 / 跟随显示器刷新率
+  AI 推理后端：TensorRT（默认，启用时几乎无停顿）
+               TensorRT-RTX（快约 25%，但每次启用时画面停顿约 6–8 秒）
+
+  能力不足时自动降级（屏幕会提示）：
+    1. Maxine 超分画质降到 1；
+    2. 原分辨率插帧跟不上 → 改用 720p 中间帧插帧，再由超分放大回去；
+    3. 720p 仍跟不上 → 目标帧率降到本机能持续输出的最高档位；
+    4. 播放中实时监测：输出帧率低于目标的 90%、画面落后声音超过 0.25 秒或持续丢帧，
+       连续 3 秒就按上面的顺序调整。每次调整后会自动重新对齐音画（画面短暂停顿，不会越来越不同步）。
+
+本机（RTX 4060 Ti 8GB）实测插帧能力（输出帧率上限，RIFE 4.26）：
+  · TensorRT       ：720p 中间帧约 85 fps，1080p 约 37 fps
+  · TensorRT-RTX   ：720p 中间帧约 117 fps，1080p 约 48 fps
+  因此：60 fps 任何片源都能稳定实现；240 fps 超出这张显卡的能力，选 240 时会自动降到可持续的档位。
+  设置对话框里会显示当前所选算法 / 后端在本机的实测能力。
+
+NVIDIA Maxine VSR（Video Effects SDK）
+-------------------------------------
+NVIDIA Video Effects SDK（Maxine VFX）里的 Video Super Resolution，AI 超分，可调画质等级。
+  · 本机实测（同一张 4K 原图缩到 1080p 再经 H.264 压缩后放大回 4K 对比）：
+    Maxine VSR 的树枝、雪面纹理明显比驱动内置 RTX VSR 和 Lanczos 更清晰、更接近原图；
+    1080p→4K 每帧约 3.5 ms（画质 2）/ 7.4 ms（画质 3）/ 10 ms（画质 4）。
+  · 与插帧的搭配（本机 RTX 4060 Ti）：
+      FRUC + Maxine：原分辨率插帧 + Maxine 画质 3，60 fps 稳定，最佳组合；
+      720p 片源 + RIFE：原分辨率 RIFE + Maxine 放大，稳定；
+      1080p 片源 + RIFE：RIFE 4.26 在原分辨率已用满显卡，此时保留原分辨率插帧，
+      本片超分自动改用驱动内置 RTX VSR（屏幕会提示），因为把每帧先降到 720p 损失更大。
+      显卡更强时会自动同时使用两者。
+  · 需要你自己下载的 NVIDIA Video Effects SDK（NVIDIA 许可不允许随程序分发）：
+    SDK 核心（VideoFX 文件夹）+ VSR 功能（nvvfxvideosuperres），
+    VSR 功能放在 VideoFX\features\nvvfxvideosuperres 或与 VideoFX 文件夹并列均可。
+    播放器会在各硬盘下三层目录内自动查找 VideoFX 文件夹（例如 F:\APP\Optical_Flow_SDK_5.0.7\VideoFX），
+    找到后记在设置里；找不到时在“视频增强设置”里点“Maxine SDK…”选择 VideoFX\bin\NVVideoEffects.dll。
+    没有 SDK 时自动改用驱动内置 RTX VSR。
+  · 必须是 Windows x64 版 SDK（woa / ARM64 版不能在这台电脑上运行）。
+  · 同一 SDK 里的 Video Frame Generation（VFG，AI 插帧，任意倍数）是另一个功能包
+    nvvfxvideoframegeneration，目前尚未加入；下载后可接入作为插帧选项。
+
+NVIDIA 光流 FRUC（Optical Flow SDK）
+------------------------------------
+用显卡里的光流硬件（NVOFA）估算运动，再用 CUDA 生成中间帧，不是 AI 模型。
+  · 固定 ×2（30→60、24→48），原分辨率处理，无需生成引擎，启用几乎无停顿；
+  · 速度：本机 1080p 约 340 fps 输出（RIFE 4.26 约 37–48 fps），显卡占用很低；
+  · 画质：干净画面、镜头平移和物体运动时与 RIFE 4.26 相当（本机实测 PSNR 39.6 dB vs 38.5 dB）；
+    噪点 / 颗粒很重的画面，FRUC 会判定无法可靠插帧而直接重复上一帧（等于没插帧）。
+    播放器会监测这一点：若连续 5 秒超过一半的帧被重复，本文件自动改用 RIFE（屏幕会提示），
+    按 Tab 可看到当前的“重复上一帧”比例。
+  · 只支持 8 位画面：10 位 / HDR 片源会先转为 8 位，可能出现轻微色带，这类片源建议用 RIFE。
+  · 需要 NVIDIA Optical Flow SDK 里的 NvOFFRUC.dll（NVIDIA 许可不允许随程序分发，所以不包含在本程序里）：
+    播放器会自动在各硬盘根目录及其下一级目录查找 Optical_Flow_SDK_*（例如 F:\APP\Optical_Flow_SDK_5.0.7），
+    找不到时在“视频增强设置”里选 NVIDIA 光流 FRUC，点“FRUC 位置…”选择
+    Optical_Flow_SDK_x.x.x\NvOFFRUC\NvOFFRUCSample\bin\win64\NvOFFRUC.dll。
+    也可以把该 win64 文件夹里的 NvOFFRUC.dll 和 cudart64_110.dll 复制到程序目录下的 nvfruc\ 文件夹。
+  · 注意：NVIDIA 已公告 Blackwell（RTX 50 系）之后的显卡不再带光流硬件，届时 FRUC 无法使用，RIFE 不受影响。
+
+首次使用某个插帧算法 / 后端
+--------------------------
+插帧需要先为本机显卡生成 TensorRT 引擎并测速：首次使用时会在后台自动进行，约 1–2 分钟，
+期间可正常播放，超分辨率不受影响，完成后插帧自动启用。
+如果更换显卡或驱动后插帧异常：右键 → 视频增强 → “重新优化插帧引擎 / 测速”。
+
+系统要求
+--------
+  · NVIDIA RTX 显卡（RTX 20 系及以上；VSR 需要较新的驱动）
+  · Windows 10/11 64 位
+  · RTX VSR 的画质等级可在 NVIDIA 控制面板“调整视频图像设置 → RTX 视频增强”里调整。
+
+目录结构
+--------
+程序目录：
+  RTXPlayer.exe        播放器主程序（C++ / Win32）
+  libmpv-2.dll         播放核心（mpv）
+  scripts\             插帧管线（rtxcore.py）、mpv 滤镜入口（rtx_interp.vpy）、引擎预热/测速（warmup.py）
+  plugins\nvfruc.dll   NVIDIA 光流 FRUC 的 VapourSynth 插件（调用你本机 SDK 中的 NvOFFRUC.dll）
+  plugins\nvvfx.dll    NVIDIA Maxine VSR 的 VapourSynth 插件（调用你本机的 Video Effects SDK）
+  shaders\             FSR / NIS / Anime4K 超分着色器
+  vs\                  便携版 VapourSynth R72 + Python 3.13
+  vsmlrt\              vs-mlrt：TensorRT / TensorRT-RTX 推理插件、CUDA 运行库、RIFE 模型
+
+用户数据（安装版在 %LOCALAPPDATA%\RTXPlayer；程序目录里有 portable 文件时则放在程序目录）：
+  settings.ini         设置（菜单 / 设置对话框里的选项会自动保存到这里）
+  engines\             为本机显卡生成的 TensorRT 引擎缓存与测速结果（bench.ini）
+  watch_later\         记住的播放位置
+  portable_config\     mpv 配置目录（可放 mpv.conf 做高级调整；input.conf 每次启动会重写）
+  logs\                运行日志（mpv.log、warmup.log），排查问题时有用
+  screenshots\         截图
+
+卸载
+----
+绿色版（程序目录里有 portable 文件）：直接删除整个程序目录即可。
+用安装包安装的：“设置 → 应用 → 已安装的应用”里卸载 RTXPlayer，
+卸载时会询问是否同时删除设置和引擎缓存（%LOCALAPPDATA%\RTXPlayer）。
+
+第三方组件与许可
+----------------
+  mpv / libmpv（GPL）、VapourSynth（LGPL）、vs-mlrt（GPL-3.0）、RIFE 模型（MIT）、
+  AMD FSR（MIT）、NVIDIA Image Scaling（MIT）、Anime4K（MIT）、
+  NVIDIA TensorRT / TensorRT for RTX / CUDA 运行库（NVIDIA 许可协议）。
+  NVIDIA Optical Flow SDK（NvOFFRUC.dll，NVIDIA DesignWorks SDK 许可）：不随本程序分发，使用你自己下载的 SDK。
+  NVIDIA Video Effects SDK（Maxine VFX，NVIDIA 软件许可）：不随本程序分发，使用你自己下载的 SDK。
+  本播放器未使用 PotPlayer 的任何程序文件。

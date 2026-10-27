@@ -1,0 +1,40 @@
+# Build output
+build/
+src/build/
+src/*/build/
+/plugins/
+*.exe
+*.dll
+*.pdb
+*.obj
+*.lib
+
+# Runtime components obtained separately (see README): not redistributed here
+/vs/
+/vsmlrt/
+/engines/
+/libmpv-2.dll
+/d3dcompiler_43.dll
+/nvfruc/
+/VideoFX/
+
+# Per-user data
+settings.ini
+/portable
+/portable_config/
+/watch_later/
+/logs/
+/screenshots/
+__pycache__/
+*.pyc
+
+# NVIDIA SDK files must never be committed (not redistributable as source)
+NvOFFRUC.h
+nvOpticalFlow*.h
+cuda.h
+nvVideoEffects*.h
+nvCVImage*.h
+nvCVStatus.h
+nvTransferD3D*.h
+nvVideoEffectsProxy.cpp
+nvCVImageProxy.cpp
